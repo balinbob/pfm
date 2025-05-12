@@ -1,23 +1,6 @@
-#include <cstdint>
+#include "streaminfo.h"
 #include <iostream>
-#include <fstream>
-#include <vector>
-#include <string>
 #include <iomanip>
-#include <cstring>
-#include <algorithm>
-
-struct StreamInfo {
-    uint16_t minBlockSize;
-    uint16_t maxBlockSize;
-    uint32_t minFrameSize;   // 24 bits
-    uint32_t maxFrameSize;   // 24 bits
-    uint32_t sampleRate;     // 20 bits
-    uint8_t  channels;       // 3 bits
-    uint8_t  bitsPerSample;  // 5 bits
-    uint64_t totalSamples;   // 36 bits
-    uint8_t  md5[16];
-};
 
 uint32_t read24BitInt(std::ifstream& file) {
     uint8_t bytes[3];

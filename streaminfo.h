@@ -1,9 +1,9 @@
+#ifndef STREAMINFO_H
+#define STREAMINFO_H
+
 #include <cstdint>
-#include <iostream>
 #include <fstream>
-#include <vector>
 #include <string>
-#include <iomanip>
 
 struct StreamInfo {
     uint16_t minBlockSize;
@@ -21,3 +21,5 @@ uint32_t read24BitInt(std::ifstream& file);
 uint16_t read16BitInt(std::ifstream& file);
 StreamInfo readStreamInfoBlock(std::ifstream& file);
 void printStreamInfo(std::ifstream& file);
+
+#endif
