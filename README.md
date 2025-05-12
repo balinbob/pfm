@@ -70,4 +70,4 @@ cl flacdump.cpp streaminfo.cpp /Fe:flacdump.exe
 
 ## License
 
-MIT License (or insert your license here).
+MIT License
