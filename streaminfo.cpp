@@ -37,7 +37,7 @@ StreamInfo readStreamInfoBlock(std::ifstream& file) {
         (static_cast<uint64_t>(packed[7]));
 
     file.read(reinterpret_cast<char*>(streamInfo.md5), 16);
-
+    
     return streamInfo;
 }
 
@@ -52,6 +52,13 @@ void printStreamInfo(std::ifstream& file) {
     std::cout << "Channels: " << static_cast<int>(streamInfo.channels) << "\n";
     std::cout << "Bits per Sample: " << static_cast<int>(streamInfo.bitsPerSample) << "\n";
     std::cout << "Total Samples: " << streamInfo.totalSamples << "\n";
+    std::cout << "Audio Data MD5: ";
+    for (int i = 0; i < 16; i++) {
+        std::cout << std::hex << std::setfill('0') << std::setw(2)
+                  << (int)streamInfo.md5[i];
+    }
+    std::cout << "\n";
+    std::cout << std::dec;
 
     return;
 }

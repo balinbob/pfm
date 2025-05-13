@@ -1,7 +1,9 @@
 #include "streaminfo.h"
 #include "flacdump.h"
+#include "export_image.h"
 #include <iostream>
 #include <iomanip>
+#include <stdexcept>
 
 
 uint32_t readLEUint32(const std::vector<uint8_t>& data, size_t offset) {
@@ -24,6 +26,41 @@ std::string blockTypeToString(BlockType type) {
     }
 }
 
+PictureData parsePictureBlock(std::ifstream& file, uint32_t blockLength) {
+    PictureData pic;
+
+    // Helper lambda to read big-endian 32-bit integers
+    auto readUint32 = [&](void) {
+        uint8_t bytes[4];
+        file.read(reinterpret_cast<char*>(bytes), 4);
+        return (bytes[0] << 24) | (bytes[1] << 16) | (bytes[2] << 8) | bytes[3];
+    };
+
+    // Picture type
+    pic.type = static_cast<uint8_t>(readUint32());
+
+    // MIME type
+    uint32_t mimeLength = readUint32();
+    std::string mimeType(mimeLength, '\0');
+    file.read(&mimeType[0], mimeLength);
+    pic.mimeType = mimeType;
+
+    // Description (skip)
+    uint32_t descLength = readUint32();
+    file.seekg(descLength, std::ios::cur);
+
+    // Skip width, height, color depth, and colors used (4 * 4 bytes)
+    file.seekg(16, std::ios::cur);
+
+    // Image data
+    uint32_t dataLength = readUint32();
+    std::vector<uint8_t> imageData(dataLength);
+    file.read(reinterpret_cast<char*>(imageData.data()), dataLength);
+    pic.imageBytes = std::move(imageData);
+
+    return pic;
+}
+
 MetadataBlockHeader readMetadataBlockHeader(std::ifstream& file) {
     uint8_t headerByte;
     file.read(reinterpret_cast<char*>(&headerByte), 1);
@@ -37,6 +74,7 @@ MetadataBlockHeader readMetadataBlockHeader(std::ifstream& file) {
 }
 
 void parseFLACMetadata(const std::string& filename) {
+    std::vector<PictureData> pictures;
     std::ifstream file(filename, std::ios::binary);
     if (!file) {
         std::cerr << "Unable to open file.\n";
@@ -54,6 +92,7 @@ void parseFLACMetadata(const std::string& filename) {
     // Read metadata blocks
     bool lastBlock = false;
     int blockOffset = 4;
+    std::pair <int, int> imageInfo = std::make_pair(0, 0);
     while (!lastBlock && file) {
         std::cout << "Block offset: " << blockOffset << '\t'; // << "\n";
         file.seekg(blockOffset, std::ios::beg);
@@ -64,6 +103,10 @@ void parseFLACMetadata(const std::string& filename) {
 
         if (header.blockType == 0) {
             printStreamInfo(file);
+        }
+
+        if (header.blockType == 6) {
+            pictures.push_back(parsePictureBlock(file, header.length));
         }
 
         if (header.blockType == 4) { // static_cast<uint8_t>(BlockType::VORBIS_COMMENT)) {
@@ -87,16 +130,22 @@ void parseFLACMetadata(const std::string& filename) {
         blockOffset += 4 + header.length;
         lastBlock = header.isLastBlock;
     }
+    file.close();
+    if (pictures.size() > 0) {
+        std::cout << "Found " << pictures.size() << " picture blocks.\n";
+        processPictures(filename, pictures);
+    }
 }
 
 int main(int argc, char* argv[]) {
+    int arg = 0;
     std::string filename = "";
-    if (argc > 1) {
-        filename = argv[1];
-    } else {
+    if (argc < 2) {
         std::cerr << "Usage: " << argv[0] << " <FLAC file>\n";
         return 1;
     }
+
+    filename = argv[1];    
     parseFLACMetadata(filename);
     return 0;
 }
