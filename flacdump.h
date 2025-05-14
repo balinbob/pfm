@@ -5,6 +5,8 @@
 #include <vector>
 #include <string>
 #include <cstdint>
+#include <fstream>
+
 
 enum class BlockType : uint8_t {
     STREAMINFO = 0,
@@ -19,7 +21,7 @@ enum class BlockType : uint8_t {
 
 struct MetadataBlockHeader {
     bool isLastBlock;
-    uint8_t blockType;
+    BlockType blockType;
     uint32_t length;
 };
 
@@ -41,6 +43,5 @@ std::string BlockTypeToString(BlockType type);
 MetadataBlockHeader readMetadataBlockHeader(std::ifstream& file);
 void parseFLACMetadata(const std::string& filename);
 PictureData parsePictureBlock(std::ifstream& file, uint32_t blockLength);
-int main(int argc, char* argv[]);
 
 #endif

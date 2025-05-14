@@ -67,9 +67,8 @@ MetadataBlockHeader readMetadataBlockHeader(std::ifstream& file) {
 
     MetadataBlockHeader header;
     header.isLastBlock = headerByte & 0x80;
-    header.blockType = headerByte & 0x7F;
+    header.blockType = static_cast<BlockType>(headerByte & 0x7F);
     header.length = read24BitInt(file);
-
     return header;
 }
 
@@ -101,15 +100,15 @@ void parseFLACMetadata(const std::string& filename) {
         << ", Length: " << header.length << "\t"
         << blockTypeToString(static_cast<BlockType>(header.blockType)) << "\n";
 
-        if (header.blockType == 0) {
+        if (header.blockType == BlockType::STREAMINFO) {
             printStreamInfo(file);
         }
 
-        if (header.blockType == 6) {
+        if (header.blockType == BlockType::PICTURE) {
             pictures.push_back(parsePictureBlock(file, header.length));
         }
-
-        if (header.blockType == 4) { // static_cast<uint8_t>(BlockType::VORBIS_COMMENT)) {
+        
+        if (header.blockType == BlockType::VORBIS_COMMENT) {
             std::vector<uint8_t> vcData(header.length);
             file.read(reinterpret_cast<char*>(vcData.data()), header.length);
             uint32_t vendorLength = readLEUint32(vcData, 0);
