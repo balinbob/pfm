@@ -50,9 +50,11 @@ Block offset: 109730   Block Type: 1, Length: 55504    PADDING
   - SEEKTABLE block
   - VORBIS_COMMENT block (including vendor and all comments)
   - PICTURE block (basic info)
+  - Optionally exports embedded pictures
   - PADDING and other blocks with type/length
 - Works with standard FLAC files
 - Lightweight and easy to integrate or extend
+
 
 ## Build
 
